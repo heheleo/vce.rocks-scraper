@@ -119,4 +119,4 @@ const fileName = OUTPUT_FILE.replace(
 
 await Bun.write(resolve(__dirname, "..", OUTPUT_DIR, fileName), JSON.stringify(data));
 
-saveDataSpinner.succeed(`Data saved to ${OUTPUT_DIR}/${OUTPUT_FILE}`);
+saveDataSpinner.succeed(`Data saved to ${OUTPUT_DIR}/${fileName}`);
