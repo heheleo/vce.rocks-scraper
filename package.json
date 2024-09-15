@@ -9,7 +9,6 @@
   "type": "module",
   "dependencies": {
     "cheerio": "^1.0.0",
-    "p-queue": "^8.0.1",
     "yocto-spinner": "^0.1.0"
   },
   "devDependencies": {
