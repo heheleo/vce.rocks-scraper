@@ -23,7 +23,7 @@ const BASE_URL = "https://atar.rocks/files/vce/exams/";
 const EXCLUDE: string[] = [
 	"UMAT/UCAT", // This is irrelevant to VCE
 	"neap-samples.pdf",
-	"other" // Students are encouraged to check this folder in their own time
+	"other", // Students are encouraged to check this folder in their own time
 ];
 /**
  * The output directory to save the data to
@@ -54,25 +54,36 @@ const data = await scrape(BASE_URL);
  * @param url the URL to scrape
  */
 export async function scrape(url: string) {
-	const html = await visitURL(url);
-	const content = getContentWithinPage(html);
 	const data: Array<Folder | File> = [];
-
-	for (const item of content) {
+	const html = await visitURL(url);
+	const content = getContentWithinPage(html).filter((item) => {
 		// Exclude the item if it is in the EXCLUDE array
-		if (EXCLUDE && EXCLUDE.includes(item.name)) continue;
+		if (EXCLUDE && EXCLUDE.includes(item.name)) return false;
+
+		return true;
+	});
+
+	// Scrape all of the folders at the same time
+	// by using Promise.all
+	const promises = [];
+	// Populate the promises array with the folders
+	for (let i = 0; i < content.length; ++i) {
+		if (content[i].type === "folder") {
+			promises.push(scrape(`${url}${content[i].name}/`));
+		}
+	}
+	const results = await Promise.all(promises);
+
+	for (let i = 0; i < content.length; ++i) {
+		const item = content[i];
 
 		if (item.type === "folder") {
-			// Recursively scrape the folder
-			const children = await scrape(`${url}${item.name}/`);
-			const folder: Folder = {
+			data.push({
 				name: item.name,
 				url: `${url}${item.name}`,
-				children,
-			};
-			data.push(folder);
-			foldersScraped++;
-			scrapeSpinner.text = getScrapeSpinnerMessage();
+				children: results[i],
+			} as Folder);
+			++foldersScraped;
 		} else if (item.type === "file") {
 			data.push({
 				name: item.name,
@@ -80,9 +91,10 @@ export async function scrape(url: string) {
 			} as File);
 
 			++filesScraped;
-			scrapeSpinner.text = getScrapeSpinnerMessage();
 		}
 	}
+
+	scrapeSpinner.text = getScrapeSpinnerMessage();
 
 	return data;
 }
@@ -117,6 +129,9 @@ const fileName = OUTPUT_FILE.replace(
 	new Date().toLocaleDateString("en-GB").replaceAll("/", "-")
 );
 
-await Bun.write(resolve(__dirname, "..", OUTPUT_DIR, fileName), JSON.stringify(data));
+await Bun.write(
+	resolve(__dirname, "..", OUTPUT_DIR, fileName),
+	JSON.stringify(data)
+);
 
 saveDataSpinner.succeed(`Data saved to ${OUTPUT_DIR}/${fileName}`);
