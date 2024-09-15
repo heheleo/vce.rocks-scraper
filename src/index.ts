@@ -1,8 +1,3 @@
-/**
- * A web scraper that fetches all of the links from a given URL.
- * @author Leo
- */
-
 import ora from "ora";
 import { fetch } from "bun";
 import { resolve } from "path";
