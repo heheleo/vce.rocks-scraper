@@ -3,9 +3,9 @@
  * @author Leo
  */
 
+import ora from "ora";
 import { fetch } from "bun";
 import { resolve } from "path";
-import yoctoSpinner from "yocto-spinner";
 import type { File, Folder } from "./types";
 import { getContentWithinPage } from "./parser";
 
@@ -43,7 +43,7 @@ const getScrapeSpinnerMessage = () => {
 };
 
 const now = performance.now();
-const scrapeSpinner = yoctoSpinner({
+const scrapeSpinner = ora({
 	text: getScrapeSpinnerMessage(),
 }).start();
 
@@ -100,7 +100,7 @@ export async function visitURL(url: string) {
 	return await request.text();
 }
 
-scrapeSpinner.success(
+scrapeSpinner.succeed(
 	`${filesScraped} files, ${foldersScraped} folders scraped in ${(
 		(performance.now() - now) /
 		1000
@@ -108,7 +108,7 @@ scrapeSpinner.success(
 );
 
 // Save the data into a JSON file
-const saveDataSpinner = yoctoSpinner({
+const saveDataSpinner = ora({
 	text: "Saving data to file...",
 }).start();
 
@@ -119,4 +119,4 @@ const fileName = OUTPUT_FILE.replace(
 
 await Bun.write(resolve(__dirname, "..", OUTPUT_DIR, fileName), JSON.stringify(data));
 
-saveDataSpinner.success(`Data saved to ${OUTPUT_DIR}/${OUTPUT_FILE}`);
+saveDataSpinner.succeed(`Data saved to ${OUTPUT_DIR}/${OUTPUT_FILE}`);
